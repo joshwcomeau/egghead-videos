@@ -8,6 +8,8 @@ const App = () => {
 class Canvas extends Component {
   componentDidMount() {
     this.ctx = this.canvas.getContext('2d');
+
+    this.scale();
     this.draw();
   }
 
@@ -15,6 +17,20 @@ class Canvas extends Component {
     this.ctx.rect(10, 10, 20, 20);
     this.ctx.fillStyle = 'red';
     this.ctx.fill();
+  }
+
+  scale() {
+    const { width, height } = this.props;
+
+    const ratio = window.devicePixelRatio || 1;
+
+    this.canvas.style.width = width + 'px';
+    this.canvas.style.height = height + 'px';
+
+    this.canvas.width = width * ratio;
+    this.canvas.height = height * ratio;
+
+    this.ctx.scale(ratio, ratio);
   }
 
   render() {
