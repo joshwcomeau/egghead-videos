@@ -1,8 +1,26 @@
 # Working with Canvas in React
 
-When coming to React, many folks wonder how they can integrate an HTML canvas into React. Because React abstracts the DOM, it may not be immediately obvious how to do this.
+The HTML canvas is a wonderful, powerful tool that allows for things not otherwise possible with the DOM. It may not be clear how to work with it in React, though.
 
-Let's start by creating a Canvas component.
+The first thing we need is a Canvas component. For now, it'll simply return a canvas element.
+
+In the browser, we don't see anything, but that's only because Canvas elements are invisible by default.
+
+To solve for this, I like to give my Canvases an outline. This is just a temporary helper.
+
+Ah, much better. We can see our canvas element now!
+
+Something a bit funny is that, unlike other `display: inline` elements, the Canvas has a fixed size of 300 pixels by 150 pixels.
+
+Let's give it an explicit size.
+
+Your first instinct may be to hardcode values for our canvas, but we want this Canvas component to be reusable.
+
+Instead, let's make it take a `width` prop and a `height` prop. We'll update our App component to supply these values. Today feels like a square day, so let's make it 200 by 200.
+
+In order for us to paint to the canvas, we need to capture a reference to the underlying DOM node. The way to do this in React is with refs.
+
+`ref={elem => {this.canvas = elem;}}
 
 ```js
 import React, { Component } from 'react';
