@@ -1,265 +1,85 @@
 # Working with Canvas in React
 
-The HTML canvas is a wonderful, powerful tool that allows for things not otherwise possible with the DOM. It may not be clear how to work with it in React, though.
+The HTML canvas is a wonderful, powerful tool that lets you build cool things not otherwise possible with the DOM. It may not be clear, though, how to work with it in React.
 
-The first thing we need is a Canvas component. For now, it'll simply return a canvas element.
+Let's start by building a Canvas component. We'll keep it really simple for now: it will just return a canvas element.
 
 In the browser, we don't see anything, but that's only because Canvas elements are invisible by default.
 
-To solve for this, I like to give my Canvases an outline. This is just a temporary helper.
+To help with this, I like to give my Canvases an outline. This is just a temporary helper, we'll get rid of it later.
 
-Ah, much better. We can see our canvas element now!
-
-Something a bit funny is that, unlike other `display: inline` elements, the Canvas has a fixed size of 300 pixels by 150 pixels.
+Something a bit funny about Canvas is that it has a default size of 300 by 150.
 
 Let's give it an explicit size.
 
-Your first instinct may be to hardcode values for our canvas, but we want this Canvas component to be reusable.
+Rather than hardcode a width and height, let's use props. This way, each Canvas can specify its own size. In our App, we'll pass a width and height down. Today feels like a square day, so let's make it 200 by 200.
 
-Instead, let's make it take a `width` prop and a `height` prop. We'll update our App component to supply these values. Today feels like a square day, so let's make it 200 by 200.
+In order for us to paint to the canvas, we need to capture a reference to the underlying DOM node.
 
-In order for us to paint to the canvas, we need to capture a reference to the underlying DOM node. The way to do this in React is with refs.
+With vanilla Javascript, you might use something like `document.querySelector` to grab the canvas DOM node.
 
-`ref={elem => {this.canvas = elem;}}
+The way to do this in React is with refs. Our ref prop takes a function, and that function is called with the DOM node by React. We'll assign the DOM node to a property on the Canvas instance.
+
+`ref={node => { this.canvas = node; }}`
+
+Once the component has mounted, we'll be able to access that node. Let's verify that it works with a quick 'console.log'.
+
+There it is! Let's use it to draw something.
+
+Earlier, I said we'd get rid of that `outline`. Let's do that now, and recreate it within the Canvas.
+
+As we would with vanilla Javascript, we'll get a 2D context. Then, we'll draw a rect, from the top left corner at 0-0, to the bottom right corner.
+
+This does the trick! But, our work isn't over yet.
+
+I don't like that the Canvas component hardcodes the drawing instructions; We want our Canvas to be generic, so that different Canvas instances can draw different things.
+
+Let's invert the control by allowing the App to specify the draw instructions. We can add a `draw` prop to the Canvas element. This will be a function, which will be given the canvas and its context as arguments.
+
+Then we'll copy all those drawing instructions into this method, so that the Canvas doesn't own them anymore. We just need to update the Canvas to invoke the draw method on mount instead.
+
+This is the essence of drawing with React!
+
+Our Canvas component produces a canvas DOM node. We can supply it with a width and height from props. We capture a reference to the underlying DOM node. When the component mounts, we create a 2D context, and invoke the `draw` callback with everything it needs to draw something.
+
+Within our App, we can add these Canvas elements wherever we need them, and specify their drawing instructions on a canvas-by-canvas basis.
 
 ```js
 import React, { Component } from 'react';
+import ReactDOM from 'react-dom';
+
+const App = () => {
+  return (
+    <Canvas
+      width={200}
+      height={200}
+      draw={(canvas, ctx) => {
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.stroke();
+      }}
+    />
+  );
+};
 
 class Canvas extends Component {
-  render() {
-    return <canvas />;
+  componentDidMount() {
+    const ctx = this.canvas.getContext('2d');
+    this.props.draw(this.canvas, ctx);
   }
-}
-
-export default Canvas;
-```
-
-We'll create the world's simplest application to use this Canvas in:
-
-```js
-// App.jsx
-import React from 'react';
-
-import Canvas from './Canvas';
-
-const App = () => (
-  <div>
-    Hello canvas<br />
-    <Canvas />
-  </div>
-);
-
-export default App;
-```
-
-(check it out in-browser, an empty screen below "Hello canvas")
-
-Believe it or not, the canvas is there; we can view it using the element inspector.
-
-This is a bit of a pain, though, so one thing I like to do is to add a border to my canvas. This is temporary! We'll remove it later on when it stops being necessary.
-
-```js
-import React, { Component } from 'react';
-
-class Canvas extends Component {
-  render() {
-    return <canvas style={{ border: '1px solid black' }} />;
-  }
-}
-
-export default Canvas;
-```
-
-Better! We can see it now.
-
-One thing that I always find a bit curious: we haven't given the Canvas a size. Canvas isn't like other `display: inline` DOM nodes, it defaults to 300 by 150.
-
-Let's give it an explicit size.
-
-Your first thought might be to inline the numbers directly:
-
-```js
-<canvas width={500} />
-```
-
-But we can help make this component reusable by specifying it as a prop:
-
-```js
-import React, { Component } from 'react';
-import PropTypes from 'prop-types';
-
-class Canvas extends Component {
-  static propTypes = {
-    width: PropTypes.number.isRequired,
-    height: PropTypes.number.isRequired,
-  };
-
   render() {
     const { width, height } = this.props;
 
-    return <canvas width={width} height={height} />;
+    return (
+      <canvas
+        ref={node => {
+          this.canvas = node;
+        }}
+        width={width}
+        height={height}
+      />
+    );
   }
 }
 
-export default Canvas;
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
-
-In our App, let's give it those props. I feel like working with a square today:
-
-```js
-import React from 'react';
-
-import Canvas from './Canvas';
-
-const App = () => (
-  <div>
-    Hello canvas<br />
-    <Canvas width={500} height={500} />
-  </div>
-);
-
-export default App;
-```
-
-We can see now that our
-
-We need some way of accessing the DOM node, and for that, we need refs.
-
-```js
-import React, { Component } from 'react';
-
-class Canvas extends Component {
-  componentDidMount() {
-    console.log(this.canvas);
-    this.ctx = this.canvas.getContext('2d');
-
-    this.ctx.rect(10, 10, 100, 100);
-    this.ctx.fillStyle = 'red';
-    this.ctx.fill();
-  }
-
-  render() {
-    return <canvas ref={elem => (this.canvas = elem)} />;
-  }
-}
-
-export default Canvas;
-```
-
-And we have a red box! When the component is rendering, it captures a reference to the canvas DOM element. After mount, we get the context from that canvas, and use it to draw a rectangle.
-
-There are a couple of minor improvements we can make to this code. Let's start by moving the drawing logic out of `componentDidMount`.
-
-```js
-import React, { Component } from 'react';
-
-class Canvas extends Component {
-  componentDidMount() {
-    this.ctx = this.canvas.getContext('2d');
-
-    this.draw();
-  }
-
-  draw = () => {
-    this.ctx.rect(10, 10, 100, 100);
-    this.ctx.fillStyle = 'red';
-    this.ctx.fill();
-  };
-
-  render() {
-    return <canvas ref={elem => (this.canvas = elem)} />;
-  }
-}
-
-export default Canvas;
-```
-
-Let's also move our ref-capturing logic into its own function.
-
-```js
-import React, { Component } from 'react';
-
-class Canvas extends Component {
-  componentDidMount() {
-    this.draw();
-  }
-
-  captureRef = elem => {
-    this.canvas = elem;
-    this.ctx = this.canvas.getContext('2d');
-  };
-
-  draw = () => {
-    this.ctx.rect(10, 10, 100, 100);
-    this.ctx.fillStyle = 'red';
-    this.ctx.fill();
-  };
-
-  render() {
-    return <canvas ref={this.captureRef} />;
-  }
-}
-
-export default Canvas;
-```
-
-Something you'll likely notice pretty quickly, if you're doing this on a modern mac computer, is that the box is blurry. This is because the canvas doesn't know how to handle pixel-dense monitors like Apple's retina screens. Retina screens cram 4 physical pixels into the space of a single software pixel, and Canvas ignores this.
-
-Thankfully there's a relatively simple fix for this.
-
-Let's write a `scaleCanvas` helper function.
-
-```js
-function scaleCanvas(canvas, ctx) {
-  const { width, height } = canvas;
-
-  const ratio = window.devicePixelRatio || 1;
-
-  canvas.style.width = width + 'px';
-  canvas.style.height = height + 'px';
-
-  canvas.width *= ratio;
-  canvas.height *= ratio;
-}
-```
-
-// Figure out our backing scale.
-// This ensures canvas looks crisp on retina displays, where there are
-// in fact 4 on-screen pixels for every 1 calculated pixel.
-export function scaleCanvas(
-canvas: HTMLCanvasElement,
-ctx: CanvasRenderingContext2D,
-width?: number,
-height?: number
-) {
-// If we're rendering on the server, do nothing.
-if (typeof window === 'undefined') {
-return;
-}
-
-width = typeof width === 'number' ? width : canvas.width;
-height = typeof height === 'number' ? height : canvas.height;
-
-const backingStoreRatio =
-ctx.webkitBackingStorePixelRatio ||
-ctx.mozBackingStorePixelRatio ||
-ctx.msBackingStorePixelRatio ||
-ctx.oBackingStorePixelRatio ||
-ctx.backingStorePixelRatio ||
-1;
-
-// $FlowFixMe - apparently backingStoreRatio can contain non-numbers?
-const ratio = (window.devicePixelRatio || 1) / backingStoreRatio;
-
-if (ratio > 1) {
-/_ eslint-disable no-param-reassign _/
-canvas.style.height = `${height}px`;
-canvas.style.width = `${width}px`;
-canvas.width = width _ ratio;
-canvas.height = height _ ratio;
-/_ eslint-enable _/
-
-    ctx.scale(ratio, ratio);
-
-}
-}
