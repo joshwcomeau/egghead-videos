@@ -15,4 +15,5 @@
 
   * ContainerQuery, AvailableSize, ResizeObserver, etc
 
+* Routing with React Router 4
 * Dynamic Routing with React Router 4
