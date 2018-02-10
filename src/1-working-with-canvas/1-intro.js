@@ -1,20 +1,23 @@
+// Working with Canvas in React
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 const App = () => {
-  return <Canvas width={200} height={200} />;
+  return (
+    <Canvas
+      draw={(canvas, ctx) => {
+        ctx.strokeRect(0, 0, canvas.width, canvas.height);
+      }}
+      width={200}
+      height={200}
+    />
+  );
 };
 
 class Canvas extends Component {
   componentDidMount() {
-    this.ctx = this.canvas.getContext('2d');
-    this.draw();
-  }
-
-  draw() {
-    this.ctx.rect(10, 10, 20, 20);
-    this.ctx.fillStyle = 'red';
-    this.ctx.fill();
+    const ctx = this.canvas.getContext('2d');
+    this.props.draw(this.canvas, ctx);
   }
 
   render() {
@@ -22,10 +25,11 @@ class Canvas extends Component {
 
     return (
       <canvas
-        ref={elem => (this.canvas = elem)}
+        ref={node => {
+          this.canvas = node;
+        }}
         width={width}
         height={height}
-        style={{ outline: '1px solid black' }}
       />
     );
   }

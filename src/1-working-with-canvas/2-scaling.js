@@ -1,22 +1,26 @@
+// Making canvases sharp on retina displays with React
 import React, { Component } from 'react';
 import ReactDOM from 'react-dom';
 
 const App = () => {
-  return <Canvas width={200} height={200} />;
+  return (
+    <Canvas
+      draw={(canvas, ctx) => {
+        ctx.rect(0, 0, canvas.width, canvas.height);
+        ctx.stroke();
+      }}
+      width={200}
+      height={200}
+    />
+  );
 };
 
 class Canvas extends Component {
   componentDidMount() {
-    this.ctx = this.canvas.getContext('2d');
+    const ctx = this.canvas.getContext('2d');
 
     this.scale();
-    this.draw();
-  }
-
-  draw() {
-    this.ctx.rect(10, 10, 20, 20);
-    this.ctx.fillStyle = 'red';
-    this.ctx.fill();
+    this.props.draw(this.canvas, ctx);
   }
 
   scale() {
@@ -38,10 +42,11 @@ class Canvas extends Component {
 
     return (
       <canvas
-        ref={elem => (this.canvas = elem)}
+        ref={node => {
+          this.canvas = node;
+        }}
         width={width}
         height={height}
-        style={{ outline: '1px solid black' }}
       />
     );
   }
