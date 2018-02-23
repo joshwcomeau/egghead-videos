@@ -26,15 +26,13 @@ class Canvas extends Component {
   }
 
   scale = () => {
-    const { width, height } = this.props;
-
     const ratio = window.devicePixelRatio || 1;
 
-    this.canvas.width = width * ratio;
-    this.canvas.height = height * ratio;
+    this.canvas.width = this.props.width * ratio;
+    this.canvas.height = this.props.height * ratio;
 
-    this.canvas.style.width = width + 'px';
-    this.canvas.style.height = height + 'px';
+    this.canvas.style.width = this.props.width + 'px';
+    this.canvas.style.height = this.props.height + 'px';
 
     this.ctx.scale(ratio, ratio);
   };
